@@ -8,5 +8,9 @@ namespace BlazorProject.Server.Models
 {
     public class ApplicationUser : IdentityUser
     {
+        public string FirstName { get; set; }
+        public string LasttName { get; set; }
+        public DateTime CreateOn { get; set; }
+        public List<Wallet> Wallets { get; set; }
     }
 }
