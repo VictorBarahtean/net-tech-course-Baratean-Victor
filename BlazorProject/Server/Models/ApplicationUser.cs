@@ -12,5 +12,6 @@ namespace BlazorProject.Server.Models
         public string LasttName { get; set; }
         public DateTime CreateOn { get; set; }
         public List<Wallet> Wallets { get; set; }
+
     }
 }
