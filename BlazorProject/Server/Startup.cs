@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using System.Linq;
 using BlazorProject.Server.Data;
 using BlazorProject.Server.Models;
+using System.Security.Claims;
 
 namespace BlazorProject.Server
 {
@@ -41,6 +42,8 @@ namespace BlazorProject.Server
 
             services.AddAuthentication()
                 .AddIdentityServerJwt();
+            services.Configure<IdentityOptions>(options =>
+                options.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier);
 
             services.AddControllersWithViews();
             services.AddRazorPages();
