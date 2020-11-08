@@ -58,5 +58,18 @@ namespace BlazorProject.Server.Controllers
 
             return Ok();
         }
+        [HttpDelete]
+        public IActionResult DeleteWallet([FromQuery] Guid walletid)
+        {
+            var wallet = context.Wallets.FirstOrDefault(x => x.Id == walletid);
+
+            if (wallet == null) 
+                return BadRequest();
+
+            context.Wallets.Remove(wallet);
+            context.SaveChanges();
+
+            return Ok();
+        }
     }
 }

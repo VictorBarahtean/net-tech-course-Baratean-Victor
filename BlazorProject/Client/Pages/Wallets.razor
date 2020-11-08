@@ -6,12 +6,12 @@
 @inject HttpClient HttpClient
 
 <style>
-    .wallet{
+    .wallet {
         width: 250px;
         border: 1px solid #555;
-        border-radius:5px;
-        padding:10px;
-        margin:10px;
+        border-radius: 5px;
+        padding: 10px;
+        margin: 10px;
     }
 </style>
 
@@ -25,19 +25,20 @@ else
 {
     @foreach (var wallet in WalletList)
     {
-        <div class="wallet">
-            <div>Wallet @wallet.Id</div>
-            <div>
-                <span>@wallet.Amount</span>
-                <span>@wallet.Currency</span>
-            </div>
-        </div>
+<div class="wallet">
+    <div>Wallet @wallet.Id</div>
+    <div>
+        <span>@wallet.Amount</span>
+        <span>@wallet.Currency</span>
+    </div>
+    <button @onclick="() => DeleteWallet(wallet.Id)">Delete wallet</button>
+</div>
     }
 }
 
 <div>
     <h3>Create New Wallet</h3>
-    <input type="text" placeholder="Currency" @bind="Currency"/>
+    <input type="text" placeholder="Currency" @bind="Currency" />
     <button @onclick="() => CreateWallet()">Create wallet</button>
 </div>
 
@@ -51,7 +52,7 @@ else
         {
             WalletList = await HttpClient.GetFromJsonAsync<List<Wallet>>("api/wallet");
         }
-        catch(AccessTokenNotAvailableException exception)
+        catch (AccessTokenNotAvailableException exception)
         {
             exception.Redirect();
         }
@@ -74,7 +75,26 @@ else
                     Amount = 0,
                     Currency = Currency
                 };
-                WalletList.Add(newWallet);
+                //WalletList.Add(newWallet);
+                WalletList = await HttpClient.GetFromJsonAsync<List<Wallet>>("api/wallet");
+            }
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    private async Task DeleteWallet(Guid walletid)
+    {
+        try
+        {
+
+            var response = await HttpClient.DeleteAsync("api/wallet?walletid=" + walletid);
+
+            if (response.IsSuccessStatusCode)
+            {
+                WalletList = await HttpClient.GetFromJsonAsync<List<Wallet>>("api/wallet");
             }
         }
         catch (AccessTokenNotAvailableException exception)
