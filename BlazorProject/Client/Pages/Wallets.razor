@@ -4,6 +4,7 @@
 @using BlazorProject.Shared
 @attribute [Authorize]
 @inject HttpClient HttpClient
+@inject NavigationManager navManager
 
 <style>
     .wallet {
@@ -31,7 +32,10 @@ else
         <span>@wallet.Amount</span>
         <span>@wallet.Currency</span>
     </div>
-    <button @onclick="() => DeleteWallet(wallet.Id)">Delete wallet</button>
+    <div>
+        <button @onclick="() => DeleteWallet(wallet.Id)">Delete wallet</button>
+        <button @onclick="() => MakeTransfer(wallet.Id)">Make transfer</button>
+    </div>
 </div>
     }
 }
@@ -47,6 +51,11 @@ else
     private string Currency;
 
     protected override async Task OnInitializedAsync()
+    {
+        await LoadWallets();
+    }
+
+    private async Task LoadWallets()
     {
         try
         {
@@ -69,14 +78,7 @@ else
 
             if (response.IsSuccessStatusCode)
             {
-                var newWallet = new Wallet
-                {
-                    Id = Guid.NewGuid(),
-                    Amount = 0,
-                    Currency = Currency
-                };
-                //WalletList.Add(newWallet);
-                WalletList = await HttpClient.GetFromJsonAsync<List<Wallet>>("api/wallet");
+                await LoadWallets();
             }
         }
         catch (AccessTokenNotAvailableException exception)
@@ -85,17 +87,24 @@ else
         }
     }
 
-    private async Task DeleteWallet(Guid walletid)
+    private async Task DeleteWallet(Guid id)
     {
         try
         {
+            await HttpClient.DeleteAsync("api/wallet/" + id);
+            await LoadWallets();
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
 
-            var response = await HttpClient.DeleteAsync("api/wallet?walletid=" + walletid);
-
-            if (response.IsSuccessStatusCode)
-            {
-                WalletList = await HttpClient.GetFromJsonAsync<List<Wallet>>("api/wallet");
-            }
+    private async Task MakeTransfer(Guid id)
+    {
+        try
+        {
+            navManager.NavigateTo($"transfer/{id}");
         }
         catch (AccessTokenNotAvailableException exception)
         {
