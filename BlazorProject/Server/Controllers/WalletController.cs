@@ -51,7 +51,18 @@ namespace BlazorProject.Server.Controllers
         [HttpPost]
         public IActionResult CreateWallet([FromQuery] string currency)
         {
+            if(CurrencyManager.Currencies.Contains(currency))
+            {
+                return BadRequest();
+            }
             var userId = userManager.GetUserId(User);
+
+            var user = context.Users.Include(x => x.Wallets).FirstOrDefault(x => x.Id == userId);
+
+            if (user.Wallets.Any(x => x.Currency == currency))
+            {
+                return BadRequest();
+            }
 
             var wallet = new Wallet
             {
@@ -59,7 +70,7 @@ namespace BlazorProject.Server.Controllers
                 Currency = currency
             };
 
-            var user = context.Users.Include(x => x.Wallets).FirstOrDefault(x => x.Id == userId);
+            
 
             if (user.Wallets == null)
             {
@@ -99,18 +110,31 @@ namespace BlazorProject.Server.Controllers
 
             var user = context.Users.Include(x => x.Wallets).FirstOrDefault(x => x.Id == userId);
 
-            if (!user.Wallets.Any(x => x.Id == Guid.Parse(data.SourceWalletId)))
+            if (!user.Wallets.Any(x => x.Currency == data.Currency))
             {
                 return BadRequest();
             }
-            var source = user.Wallets.FirstOrDefault(x => x.Id == Guid.Parse(data.SourceWalletId));
+            var source = user.Wallets.FirstOrDefault(x => x.Currency == data.Currency);
+
+            if (source.Amount < data.Amount)
+            {
+                return BadRequest();
+            }
+
             var destinationUser = context.Users.Include(x => x.Wallets).FirstOrDefault(x => x.UserName == data.Username);
+
             var destination = destinationUser.Wallets.FirstOrDefault(x => x.Currency == data.Currency);
 
-            if(destination == null || source.Amount < data.Amount)
+            if(destination == null)
             {
-                return BadRequest();
+                destination = new Wallet
+                {
+                    Amount = 0,
+                    Currency = data.Currency 
+                };
+                destinationUser.Wallets.Add(destination);
             }
+
             source.Amount -= data.Amount;
             destination.Amount += data.Amount;
 

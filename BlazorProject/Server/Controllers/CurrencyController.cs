@@ -1,9 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Mvc;
 using BlazorProject.Shared;
 
 namespace BlazorProject.Server.Controllers
@@ -17,13 +12,7 @@ namespace BlazorProject.Server.Controllers
         {
             return new CurrencyList
             {
-                Currencies = new List<string>
-                {
-                    "EUR",
-                    "USD",
-                    "MDL",
-                    "EC"
-                }
+                Currencies = CurrencyManager.Currencies
             };
         }
     }
