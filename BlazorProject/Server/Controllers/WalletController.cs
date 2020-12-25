@@ -10,6 +10,7 @@ using BlazorProject.Shared;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Wallet = BlazorProject.Server.Models.Wallet;
+using BlazorProject.Server.Helpers;
 
 namespace BlazorProject.Server.Controllers
 {
@@ -30,8 +31,6 @@ namespace BlazorProject.Server.Controllers
         [HttpGet]
         public List<Wallet> GetWallets()
         {
-            //returneaza toate wallets
-            //var wallets = context.Wallets.ToList();
             var userId = userManager.GetUserId(User);
             var wallets = context.Users.Include(x => x.Wallets).FirstOrDefault(x => x.Id == userId).Wallets;
             return wallets;
@@ -41,8 +40,6 @@ namespace BlazorProject.Server.Controllers
         [Route("{id}")]
         public Wallet GetWallet(Guid id)
         {
-            //returneaza toate wallets
-            //var wallets = context.Wallets.ToList();
             var userId = userManager.GetUserId(User);
             var wallet = context.Users.Include(x => x.Wallets).FirstOrDefault(x => x.Id == userId).Wallets.FirstOrDefault(x => x.Id == id);
             return wallet;
@@ -51,7 +48,7 @@ namespace BlazorProject.Server.Controllers
         [HttpPost]
         public IActionResult CreateWallet([FromQuery] string currency)
         {
-            if(CurrencyManager.Currencies.Contains(currency))
+            if(!CurrencyManager.Currencies.Contains(currency))
             {
                 return BadRequest();
             }
@@ -150,6 +147,39 @@ namespace BlazorProject.Server.Controllers
             context.SaveChanges();
 
             return Ok();
+        }
+        [HttpGet]
+        [Route("transfers/{itemsPerPage}/{pageNumber}")]
+        public TransactionHistoryData GetTransactions(int itemsPerPage, int pageNumber, [FromQuery] Direction direction)
+        {
+            var userId = userManager.GetUserId(User);
+
+            var walletIds = context.Wallets.Where(w => w.ApplicationUserId == userId).Select(w => w.Id).ToList();
+
+            var query = context.Transactions.Where(t => walletIds.Contains(t.DestinationWalletId) || walletIds.Contains(t.SourceWalletId));
+
+            Transaction[] transactions = null;
+            switch (direction)
+            {
+                case Direction.None:
+                    transactions = query.OrderByDescending(x => x.Date).Skip((pageNumber - 1) * itemsPerPage).Take(itemsPerPage).ToArray();
+                    break;
+                case Direction.Inbound:
+                    transactions = query.OrderByDescending(x => x.Date).Skip((pageNumber - 1) * itemsPerPage).Take(itemsPerPage).ToArray();
+                    break;
+                case Direction.Outbound:
+                    transactions = query.OrderByDescending(x => x.Date).Skip((pageNumber - 1) * itemsPerPage).Take(itemsPerPage).ToArray();
+                    break;
+            }
+            
+
+            var transactionsData = new TransactionHistoryData
+            {
+                Transactions = transactions.Select(DomainMapper.ToDto).ToArray(),
+                ItemCount = query.Count() 
+            };
+
+            return transactionsData;
         }
     }
 }
